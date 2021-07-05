@@ -12,18 +12,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:autoLink="web"
-        android:text="Major Project"
+        android:textSize="30sp"
+        android:textColor="@color/purple_200"
+        android:text="@string/major_project"
         android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/welcomemsg"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Welcome from Android-er" />
 
     <TextView
-        android:id="@+id/infoip"
+        android:id="@+id/infoIp"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 

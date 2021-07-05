@@ -4,9 +4,6 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 
-import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
@@ -23,14 +20,12 @@ import java.util.Enumeration;
 
 public class MainActivity extends AppCompatActivity {
 
-    EditText welcomeMsg;
     TextView infoIp;
     TextView infoMsg;
     String msgLog = "";
 
     ServerSocket httpServerSocket;
 
-    String response= "";
 
 
     @Override
@@ -38,21 +33,10 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        welcomeMsg = (EditText) findViewById(R.id.welcomemsg);
-        infoIp = (TextView) findViewById(R.id.infoip);
+        infoIp = (TextView) findViewById(R.id.infoIp);
         infoMsg = (TextView) findViewById(R.id.msg);
 
         infoIp.setText(getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
-        try {
-            InputStream inst = getAssets().open("index.html");
-            int size = inst.available();
-            byte[] buffer = new byte[size];
-            inst.read(buffer);
-            inst.close();
-            response = new String(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         HttpServerThread httpServerThread = new HttpServerThread();
         httpServerThread.start();
@@ -118,10 +102,7 @@ public class MainActivity extends AppCompatActivity {
                 while(true){
                     socket = httpServerSocket.accept();
 
-                    HttpResponseThread httpResponseThread =
-                            new HttpResponseThread(
-                                    socket,
-                                    welcomeMsg.getText().toString());
+                    HttpResponseThread httpResponseThread = new HttpResponseThread(socket);
                     httpResponseThread.start();
                 }
             } catch (IOException e) {
@@ -135,11 +116,10 @@ public class MainActivity extends AppCompatActivity {
     private class HttpResponseThread extends Thread {
 
         Socket socket;
-        String h1;
+        String response= "";
 
-        HttpResponseThread(Socket socket, String msg){
+        HttpResponseThread(Socket socket){
             this.socket = socket;
-//            h1 = msg;
         }
 
         @Override
@@ -154,12 +134,18 @@ public class MainActivity extends AppCompatActivity {
 
                 os = new PrintWriter(socket.getOutputStream(), true);
 
-//                String response =
-//                        "<html><head></head>" +
-//                                "<body>" +
-//                                "<h1>" + h1 + "</h1>" +
-//                                "</body></html>";
-//                String response = h1;
+
+                //reading file from assests folder
+                try {
+                    InputStream inst = getAssets().open("index.html");
+                    int size = inst.available();
+                    byte[] buffer = new byte[size];
+                    inst.read(buffer);
+                    inst.close();
+                    response = new String(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 os.print("HTTP/1.0 200" + "\r\n");
                 os.print("Content type: text/html" + "\r\n");
@@ -185,7 +171,6 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
 
-            return;
         }
     }
 }

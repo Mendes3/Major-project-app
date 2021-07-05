@@ -2,11 +2,16 @@ package com.example.test;
 
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
+
+
+import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.InetAddress;
@@ -25,6 +30,11 @@ public class MainActivity extends AppCompatActivity {
 
     ServerSocket httpServerSocket;
 
+    TextView tv_text;
+    Button show;
+    String text= "";
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -34,11 +44,26 @@ public class MainActivity extends AppCompatActivity {
         infoIp = (TextView) findViewById(R.id.infoip);
         infoMsg = (TextView) findViewById(R.id.msg);
 
-        infoIp.setText(getIpAddress() + ":"
-                + HttpServerThread.HttpServerPORT + "\n");
+        infoIp.setText(getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
+
+        tv_text= (TextView) findViewById(R.id.tv_text);
+        show= (Button) findViewById(R.id.btnShow);
+                try {
+                    InputStream inst = getAssets().open("hello.txt");
+                    int size = inst.available();
+                    byte[] buffer = new byte[size];
+                    inst.read(buffer);
+                    inst.close();
+                    text = new String(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                tv_text.setText(text);
 
         HttpServerThread httpServerThread = new HttpServerThread();
         httpServerThread.start();
+
+
     }
 
     @Override
@@ -120,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
 
         HttpResponseThread(Socket socket, String msg){
             this.socket = socket;
-            h1 = msg;
+            h1 = text;
         }
 
         @Override

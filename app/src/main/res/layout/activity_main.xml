@@ -13,7 +13,7 @@
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:autoLink="web"
-        android:text="http://android-er.blogspot.com/"
+        android:text="Major Project"
         android:textStyle="bold" />
 
     <EditText
@@ -23,13 +23,24 @@
         android:text="Welcome from Android-er" />
 
     <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/tv_text"/>
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Show"
+        android:id="@+id/btnShow"/>
+
+    <TextView
         android:id="@+id/infoip"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent" >
+        android:layout_height="444dp">
 
         <TextView
             android:id="@+id/msg"

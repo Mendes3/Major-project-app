@@ -30,9 +30,7 @@ public class MainActivity extends AppCompatActivity {
 
     ServerSocket httpServerSocket;
 
-    TextView tv_text;
-    Button show;
-    String text= "";
+    String response= "";
 
 
     @Override
@@ -45,20 +43,16 @@ public class MainActivity extends AppCompatActivity {
         infoMsg = (TextView) findViewById(R.id.msg);
 
         infoIp.setText(getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
-
-        tv_text= (TextView) findViewById(R.id.tv_text);
-        show= (Button) findViewById(R.id.btnShow);
-                try {
-                    InputStream inst = getAssets().open("hello.txt");
-                    int size = inst.available();
-                    byte[] buffer = new byte[size];
-                    inst.read(buffer);
-                    inst.close();
-                    text = new String(buffer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-                tv_text.setText(text);
+        try {
+            InputStream inst = getAssets().open("index.html");
+            int size = inst.available();
+            byte[] buffer = new byte[size];
+            inst.read(buffer);
+            inst.close();
+            response = new String(buffer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         HttpServerThread httpServerThread = new HttpServerThread();
         httpServerThread.start();
@@ -145,7 +139,7 @@ public class MainActivity extends AppCompatActivity {
 
         HttpResponseThread(Socket socket, String msg){
             this.socket = socket;
-            h1 = text;
+//            h1 = msg;
         }
 
         @Override
@@ -160,11 +154,12 @@ public class MainActivity extends AppCompatActivity {
 
                 os = new PrintWriter(socket.getOutputStream(), true);
 
-                String response =
-                        "<html><head></head>" +
-                                "<body>" +
-                                "<h1>" + h1 + "</h1>" +
-                                "</body></html>";
+//                String response =
+//                        "<html><head></head>" +
+//                                "<body>" +
+//                                "<h1>" + h1 + "</h1>" +
+//                                "</body></html>";
+//                String response = h1;
 
                 os.print("HTTP/1.0 200" + "\r\n");
                 os.print("Content type: text/html" + "\r\n");

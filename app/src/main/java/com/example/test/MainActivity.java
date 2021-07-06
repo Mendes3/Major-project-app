@@ -1,12 +1,18 @@
 package com.example.test;
 
+
 import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,10 +28,16 @@ public class MainActivity extends AppCompatActivity {
 
     TextView infoIp;
     TextView infoMsg;
+    TextView txtResult;
+
+    Button startButton;
+    Button stopButton;
     String msgLog = "";
 
-    ServerSocket httpServerSocket;
+    StringBuffer response;
 
+
+    ServerSocket httpServerSocket;
 
 
     @Override
@@ -38,11 +50,17 @@ public class MainActivity extends AppCompatActivity {
 
         infoIp.setText(getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
 
+        txtResult = (TextView) findViewById(R.id.txtResult);
+        startButton = (Button)findViewById(R.id.btnStart);
+        stopButton = (Button)findViewById(R.id.btnStop);
+
+        writeFile();
+        readFile();
+
         HttpServerThread httpServerThread = new HttpServerThread();
         httpServerThread.start();
 
-
-    }
+        }
 
     @Override
     protected void onDestroy() {
@@ -116,7 +134,6 @@ public class MainActivity extends AppCompatActivity {
     private class HttpResponseThread extends Thread {
 
         Socket socket;
-        String response= "";
 
         HttpResponseThread(Socket socket){
             this.socket = socket;
@@ -135,17 +152,19 @@ public class MainActivity extends AppCompatActivity {
                 os = new PrintWriter(socket.getOutputStream(), true);
 
 
-                //reading file from assests folder
-                try {
-                    InputStream inst = getAssets().open("index.html");
-                    int size = inst.available();
-                    byte[] buffer = new byte[size];
-                    inst.read(buffer);
-                    inst.close();
-                    response = new String(buffer);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+//                //reading file from assests folder
+//                try {
+//                    InputStream inst = getAssets().open("index.html");
+//                    int size = inst.available();
+//                    byte[] buffer = new byte[size];
+//                    inst.read(buffer);
+//                    inst.close();
+//                    response = new String(buffer);
+//                } catch (IOException e) {
+//                    e.printStackTrace();
+//                }
+
+
 
                 os.print("HTTP/1.0 200" + "\r\n");
                 os.print("Content type: text/html" + "\r\n");
@@ -172,5 +191,53 @@ public class MainActivity extends AppCompatActivity {
             }
 
         }
+    }
+
+    public void writeFile() {
+
+        String temp="";
+        try {
+                    InputStream inst = getAssets().open("index.html");
+                    int size = inst.available();
+                    byte[] buffer = new byte[size];
+                    inst.read(buffer);
+                    inst.close();
+                    temp = new String(buffer);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+        try {
+            FileOutputStream fileOutputStream = openFileOutput("index.html", MODE_PRIVATE);
+            fileOutputStream.write(temp.getBytes());
+            fileOutputStream.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void readFile() {
+        try {
+            FileInputStream fileInputStream = openFileInput("index.html");
+            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            StringBuffer stringBuffer = new StringBuffer();
+
+            String lines;
+            while ((lines = bufferedReader.readLine()) != null) {
+                stringBuffer.append(lines + "\n");
+            }
+            response = stringBuffer;
+            txtResult.setText(response);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 }

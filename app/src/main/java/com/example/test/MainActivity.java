@@ -5,14 +5,15 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 
 
+import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -35,6 +36,7 @@ public class MainActivity extends AppCompatActivity {
     String msgLog = "";
 
     StringBuffer response;
+    String temp;
 
 
     ServerSocket httpServerSocket;
@@ -45,27 +47,54 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        infoIp = (TextView) findViewById(R.id.infoIp);
-        infoMsg = (TextView) findViewById(R.id.msg);
-
-        infoIp.setText(getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
+        infoIp = findViewById(R.id.infoIp);
+        infoMsg = findViewById(R.id.msg);
 
         txtResult = (TextView) findViewById(R.id.txtResult);
         startButton = (Button)findViewById(R.id.btnStart);
         stopButton = (Button)findViewById(R.id.btnStop);
+        stopButton.setEnabled(false);
 
-        writeFile();
-        readFile();
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                writeFile();
+                readFile();
 
-        HttpServerThread httpServerThread = new HttpServerThread();
-        httpServerThread.start();
+                String ipaddress = (getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
+                infoIp.setText(ipaddress);
 
+                HttpServerThread httpServerThread = new HttpServerThread();
+                httpServerThread.start();
+
+                startButton.setText("Server ON");
+                startButton.setEnabled(false);
+                stopButton.setEnabled(true);
+
+            }
+        });
+
+        stopButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (httpServerSocket != null) {
+                    try {
+                        httpServerSocket.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                infoIp.setText("");
+                infoMsg.setText("");
+                startButton.setText("Start");
+                startButton.setEnabled(true);
+            }
+        });
         }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
         if (httpServerSocket != null) {
             try {
                 httpServerSocket.close();
@@ -94,7 +123,6 @@ public class MainActivity extends AppCompatActivity {
                     }
 
                 }
-
             }
 
         } catch (SocketException e) {
@@ -195,7 +223,7 @@ public class MainActivity extends AppCompatActivity {
 
     public void writeFile() {
 
-        String temp="";
+        //First reading from the assests folder--later reading would be from database.
         try {
                     InputStream inst = getAssets().open("index.html");
                     int size = inst.available();
@@ -206,6 +234,8 @@ public class MainActivity extends AppCompatActivity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
+        //Storing the file from assest  into app-specific storage folder.
         try {
             FileOutputStream fileOutputStream = openFileOutput("index.html", MODE_PRIVATE);
             fileOutputStream.write(temp.getBytes());
@@ -220,6 +250,8 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void readFile() {
+
+        //Reading from the app-specific internal storage for hosting.
         try {
             FileInputStream fileInputStream = openFileInput("index.html");
             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
@@ -232,7 +264,7 @@ public class MainActivity extends AppCompatActivity {
                 stringBuffer.append(lines + "\n");
             }
             response = stringBuffer;
-            txtResult.setText(response);
+//            txtResult.setText(response);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

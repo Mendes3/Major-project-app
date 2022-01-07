@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 infoMsg.setText("");
                 startButton.setText("Start");
                 startButton.setEnabled(true);
+                stopButton.setEnabled(false);
             }
         });
         }

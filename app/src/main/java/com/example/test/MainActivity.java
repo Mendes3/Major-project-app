@@ -5,11 +5,14 @@ import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.ProgressDialog;
-import android.graphics.Bitmap;
+import android.content.Intent;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
+
+
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
@@ -21,8 +24,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,9 +43,7 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.HttpURLConnection;
@@ -66,33 +65,31 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     TextView infoIp;
     TextView infoMsg;
     TextView txtResult;
+    EditText userId;
+    TextView hiText;
 
     Button startButton;
     Button stopButton;
+    Button distributeButton;
     String msgLog = "";
-
-    EditText Status,Ipaddress;
-    RadioGroup status;
-    RadioButton radiobutton;
     StringBuffer response;
-    String temp;
 
-//newly added code for fetching from database
-private String filesJSON;
+    //newly added code for fetching from database
+    private String filesJSON;
 
     private static final String JSON_ARRAY ="result";
     private static final String FILE_URL = "url";
 
     private JSONArray arrayFiles= null;
 
-    private int TRACK = 0;
+    private final int TRACK = 0;
 
     private static final String FILES_URL = "http://192.168.1.112/database/getfiles.php";           //** insert the updated ip address of the localhost
 
     private Button buttonFetchFiles;
     TextView txtException;
 
-String url="http://192.168.1.112/database/insert.php"; //__________this url will be different__________
+    String url="http://192.168.1.112/database/update.php"; //__________this url will be different__________
     //declaration of global variables
     private int sec =0;
     private boolean isRunning;
@@ -114,14 +111,21 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
         infoIp = findViewById(R.id.infoIp);
         infoMsg = findViewById(R.id.msg);
 
-        txtResult = (TextView) findViewById(R.id.txtResult);
-        startButton = (Button)findViewById(R.id.btnStart);
-        stopButton = (Button)findViewById(R.id.btnStop);
-        stopButton.setEnabled(false);
+        txtResult = findViewById(R.id.txtResult);
+        startButton = findViewById(R.id.btnStart);
+        startButton.setEnabled(false);
+        stopButton = findViewById(R.id.btnStop);
+        distributeButton = findViewById(R.id.btnDistribute);
 
-        txtException = (TextView) findViewById(R.id.ExceptionMsg);
-        buttonFetchFiles = (Button) findViewById(R.id.buttonFetchFiles);
+        stopButton.setEnabled(false);
+        userId = findViewById(R.id.deviceId);
+        hiText = findViewById(R.id.title);
+
+        txtException = findViewById(R.id.ExceptionMsg);
+        buttonFetchFiles = findViewById(R.id.buttonFetchFiles);
         buttonFetchFiles.setOnClickListener(this);
+
+
 
         if (savedInstanceState != null){
             sec = savedInstanceState.getInt("seconds");
@@ -133,10 +137,14 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
             NotificationManager manager = getSystemService(NotificationManager.class);
             manager.createNotificationChannel(channel);
         }
+        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
+        final String dbipaddress = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
+
                 NotificationCompat.Builder builder = new NotificationCompat.Builder(MainActivity.this, CHANNEL_ID)
 //                        new NotificationCompat.Builder(getApplicationContext())
                         .setSmallIcon(R.drawable.server)
@@ -145,28 +153,38 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
                         .setDefaults(sec);
 
                 NotificationManagerCompat notificationManager = NotificationManagerCompat.from(MainActivity.this);
-//                        getSystemService(NOTIFICATION_SERVICE);
-                notificationManager.notify(notificationId, builder.build());
 
 
+//                writeFile();
 
 
-                writeFile();
-                readFile();
+                //fordatabase("Active","0",user);
+                String user = userId.getText().toString();
+                if (user.isEmpty()) {
+                    Toast.makeText(MainActivity.this, "Enter UserId First", Toast.LENGTH_LONG).show();
+                    infoIp.setText("Enter UserId First");
 
-                String ipaddress = (getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
-                infoIp.setText(ipaddress);
+                }
+                else{
+                    hiText.setText("Welcome, "+user);
+                    readFile();
 
-                HttpServerThread httpServerThread = new HttpServerThread();
-                httpServerThread.start();
+                    String ipaddress = (getIpAddress() + ":" + HttpServerThread.HttpServerPORT + "\n");
+                    // infoIp.setText(ipaddress);// just for test purpose
 
-                startButton.setText("Server ON");
-                isRunning = true;
-                startTimer();
-                fordatabase("Active","0");
+                    infoIp.setText(dbipaddress+":"+HttpServerThread.HttpServerPORT);
+                    infoMsg.setText("SERVER STARTED");
 
-                startButton.setEnabled(false);
-                stopButton.setEnabled(true);
+                    HttpServerThread httpServerThread = new HttpServerThread();
+                    httpServerThread.start();
+                    notificationManager.notify(notificationId, builder.build());
+                    //infoIp.setText("SERVER STARTED");
+                    startButton.setText("Server ON");
+                    isRunning = true;
+                    startTimer();
+                    startButton.setEnabled(false);
+                    stopButton.setEnabled(true);
+                }
 
             }
         });
@@ -175,7 +193,6 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
             @Override
             public void onClick(View v) {
                 NotificationManagerCompat.from(MainActivity.this).cancel(notificationId);
-//                fordatabase("InActive");
                 if (httpServerSocket != null) {
                     try {
                         httpServerSocket.close();
@@ -186,44 +203,66 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
 
                 infoIp.setText("");
                 infoMsg.setText("");
+                //userId.setText("");
                 startButton.setText("Start");
                 startButton.setEnabled(true);
                 stopButton.setEnabled(false);
+
                 isRunning = false;
+                String user = userId.getText().toString();
+
                 String str_sec= String.valueOf(sec);
-                fordatabase("InActive", str_sec);
+                fordatabase("InActive", str_sec,user,dbipaddress);
                 sec =0;
 
             }
         });
+        distributeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                // Intents are objects of the android.content.Intent type. Your code can send them
+                // to the Android system defining the components you are targeting.
+                // Intent to start an activity called SecondActivity with the following code:
+                Intent intent = new Intent(MainActivity.this, MainActivity2.class);
+
+                //Sending the distribution content to the second activity.
+//                intent.putExtra("Distribution_content", temp);
+
+
+                // start the activity connect to the specified class
+                startActivity(intent);
+            }
+        });
+
     }
+
+
+
     private void extractJSON(){
         try {
             JSONObject jsonObject = new JSONObject(filesJSON);
             arrayFiles = jsonObject.getJSONArray(JSON_ARRAY);
             System.out.println("Here here here");
         } catch (JSONException e) {
-//            System.out.println("tHere there there there there there there there there there");
             e.printStackTrace();
         }
     }
 
-    private void showImage(){
+    private void showFile(){
         try {
             JSONObject jsonObject = arrayFiles.getJSONObject(TRACK);
 
-            getImage(jsonObject.getString(FILE_URL));
+            getFile(jsonObject.getString(FILE_URL));
             System.out.println("URL URL URL::::::");
             System.out.println(jsonObject.getString(FILE_URL));
-            System.out.println("Show show show show Show show show show Show show show show Show show show show Show show show show");
         } catch (JSONException e) {
             e.printStackTrace();
         }
     }
 
-    private void getAllImages() {
+    private void getAllFiles() { // get all files URL
         @SuppressLint("StaticFieldLeak")
-        class GetAllImages extends AsyncTask<String,Void,String> {
+        class GetAllFiles extends AsyncTask<String,Void,String> {
             ProgressDialog loading;
             @Override
             protected void onPreExecute() {
@@ -234,19 +273,14 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
             @Override
             protected void onPostExecute(String s) {
 
-//                super.onPostExecute(s);
-//                loading.dismiss();                    // this is used to cancel the loading icon, OK
-//                System.out.println("TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST TEST");
-
-////                Toast.makeText(MainActivity.this,s,Toast.LENGTH_LONG).show();
+//
                 super.onPostExecute(s);
                 loading.dismiss();
                 Toast.makeText(MainActivity.this,s,Toast.LENGTH_LONG).show();
                 filesJSON = s;
                 extractJSON();
-                showImage();
+                showFile();
             }
-
 
             @Override
             protected String doInBackground(String... params) {
@@ -274,23 +308,26 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
                 }
             }
         }
-        GetAllImages gai = new GetAllImages();
+        GetAllFiles gai = new GetAllFiles();
         gai.execute(FILES_URL);
     }
 
-    private void getImage(String urlToImage){  //take a string as a parameter. The string would have the url to image extracted from json array.
+    private void getFile(String urlToFile){  //take a string as a parameter. The string would have the url to image extracted from json array.
+//        final String[] content_fromdb = {""};
         @SuppressLint("StaticFieldLeak")
-        class GetImage extends AsyncTask<String,Void, Bitmap>{
+        class GetFile extends AsyncTask<String,Void, String>{
             ProgressDialog loading;
-            @Override
-            protected Bitmap doInBackground(String... params) {
-                URL url = null; // creating a url object
-                Bitmap image = null; // bitmap all images that is shown in the  android app
-                StringBuilder content = new StringBuilder();
 
-                String urlToImage = params[0];
+            @Override
+            protected String doInBackground(String... params) {
+                URL url = null; // creating a url object
+                StringBuilder content = new StringBuilder();
+                String content_fromdb = null;
+
+
+                String urlToFile = params[0];
                 try {
-                    url = new URL(urlToImage);
+                    url = new URL(urlToFile);
                     URLConnection urlConnection = url.openConnection(); // creating a url connection object
 
                     // wrapping the urlconnection in a bufferedreader
@@ -303,14 +340,12 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
                     }
                     bufferedReader.close();
 
-
-                    //image = BitmapFactory.decodeStream(url.openConnection().getInputStream()); // this is for image
-                    //image = url.openConnection().getInputStream()); // for text
-
                     System.out.println("TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT TEXT");
+                    content_fromdb = content.toString();
+                    System.out.println(content_fromdb);
+                    //txtException.setText(content_fromdb); // just for test purpose
+                    txtException.setText("FIlE FETCHED");
 
-                    System.out.println(content.toString());
-                    txtException.setText(content.toString());
 
                 } catch (MalformedURLException e) { // this happens when the url is invalid
                     e.printStackTrace();
@@ -319,40 +354,48 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
                     e.printStackTrace();
                 }
 
-
-
-//                 return "Image";
                 System.out.println("image image image image image image image image image image image image");
-                System.out.println(image);
+                System.out.println(content_fromdb);
                 System.out.println("image image image image image image image image image image image image displayed displayed displayed");
-                return image;
+                return content_fromdb;
             }
 
             @Override
             protected void onPreExecute() {
                 super.onPreExecute();
-                loading = ProgressDialog.show(MainActivity.this,"Downloading Image...","Please wait...",true,true);
-                System.out.println("Downloading Downloading Downloading Downloading Downloading Downloading Downloading Downloading");
+                loading = ProgressDialog.show(MainActivity.this,"Downloading File...","Please wait...",true,true);
+
             }
 
             @Override
-            protected void onPostExecute(Bitmap bitmap) {
-                super.onPostExecute(bitmap);
+            protected void onPostExecute(String c) {
+                super.onPostExecute(c);
+                System.out.println("Downloading Downloading Downloading Downloading Downloading Downloading Downloading Downloading");
+                System.out.println(c);
+                startButton.setEnabled(true);
+                writeFile(c);
+                buttonFetchFiles.setEnabled(false);
                 loading.dismiss();
-                System.out.println("Now now now now now");
             }
         }
-        GetImage gi = new GetImage();
-        gi.execute(urlToImage);
+        GetFile gi = new GetFile();
+        gi.execute(urlToFile);
+        System.out.println("+++++++++++++++++++++++++++++++++++++++");
+
     }
-    private void fordatabase(final String state, String time) {
-        WifiManager wifiManager = (WifiManager) getApplicationContext().getSystemService(WIFI_SERVICE);
-        final String dbipaddress = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
+    private void fordatabase(final String state, String time, String user,String dbipaddress) {
+
 
 //        int radioId = status.getCheckedRadioButtonId();
 //        radiobutton = findViewById(radioId);
 ////        infoIp.setText(radiobutton.getText());
 //        final String state= (String) radiobutton.getText();
+        // WifiManager manager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+//        WifiInfo info = wifiManager.getConnectionInfo();
+//        String address = info.getMacAddress();
+//        System.out.println("MA mac hu");
+//        System.out.println(address);
+//        System.out.println("MA mac hu");
 
         RequestQueue queue = Volley.newRequestQueue(MainActivity.this);
 
@@ -361,7 +404,7 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
             @Override
             public void onResponse(String response) {
 
-                Toast.makeText(MainActivity.this, "Insertion Is:" + response, Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Insertion Is:" + response, Toast.LENGTH_SHORT).show(); //just fortest purpose
                 Log.d("response",response);
             }
         }, new Response.ErrorListener() {
@@ -383,6 +426,8 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
 
                 map.put("Ipaddress",dbipaddress);
                 map.put("Offered_Time",time);
+                map.put("userid",user);
+
                 System.out.println("INSERTED INSERTED______+++++++++++");
                 return map;
             }
@@ -422,7 +467,7 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
     {
 //        final String[] time_value = {""};
         final String[] time_value = {""};
-        final TextView timer = (TextView)findViewById(R.id.timer);
+        final TextView timer = findViewById(R.id.timer);
 
         final Handler hd = new Handler();
 
@@ -454,11 +499,7 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
         System.out.println("++++++++++++++++");
         System.out.println(time_value[0]);
         System.out.println("++++++++++++++++");
-
-
-
 //        return time_value[0];
-
     }
 
 
@@ -508,7 +549,7 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
     @Override
     public void onClick(View v) {
         if(v == buttonFetchFiles) {
-            getAllImages();
+            getAllFiles();
         }
     }
 
@@ -587,7 +628,9 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
                     @Override
                     public void run() {
 
-                        infoMsg.setText(msgLog);
+                        //infoMsg.setText(msgLog);//just for test purpose
+                        infoMsg.setText("SERVER IS HOSTING THE FILE");
+
                     }
                 });
 
@@ -599,19 +642,21 @@ String url="http://192.168.1.112/database/insert.php"; //__________this url will
         }
     }
 
-    public void writeFile() {
+    public void writeFile(String temp) {
 
         //First reading from the assests folder--later reading would be from database.
-        try {
-            InputStream inst = getAssets().open("index.html");
-            int size = inst.available();
-            byte[] buffer = new byte[size];
-            inst.read(buffer);
-            inst.close();
-            temp = new String(buffer);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+//        try {
+//            InputStream inst = getAssets().open("index.html");
+//            int size = inst.available();
+//            byte[] buffer = new byte[size];
+//            inst.read(buffer);
+//            inst.close();
+//            temp = new String(buffer);
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+        System.out.print(temp);
+
 
         //Storing the file from assest  into app-specific storage folder.
         try {

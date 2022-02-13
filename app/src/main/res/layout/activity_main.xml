@@ -11,14 +11,54 @@
 
 
     <TextView
+
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:textSize="30sp"
-        android:textColor="@color/purple_200"
+        android:fontFamily="serif"
         android:text="@string/major_project"
+        android:textColor="@color/purple_200"
+        android:textSize="30sp"
         android:textStyle="bold" />
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="10dp">
+        <TextView
+            android:id="@+id/timer"
+            android:layout_width="97dp"
+            android:layout_height="42dp"
+            android:gravity="center"
+            android:text="00:00:00"
+            android:textColor="@color/purple_200"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
+
+        <TextView
+            android:id="@+id/title"
+
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:layout_alignParentRight="true"
+            android:layout_toRightOf="@id/timer"
+            android:textSize="20sp"
+            android:textAlignment="center"
+            android:textColor="@color/purple_200" />
+
+
+    </RelativeLayout>
+    <EditText
+        android:id="@+id/deviceId"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:ems="10"
+        android:inputType="textPersonName"
+        android:hint="Enter UserID" />
 
     <RelativeLayout
         android:layout_width="wrap_content"
@@ -30,7 +70,8 @@
             android:id="@+id/btnStart"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginRight="60dp"
+            android:layout_marginEnd="60dp"
+            android:background="@color/purple_500"
             android:text="Start" />
 
         <Button
@@ -38,24 +79,38 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toRightOf="@id/btnStart"
+            android:background="@color/purple_500"
             android:text="Stop" />
     </RelativeLayout>
+
     <Button
+        android:id="@+id/buttonFetchFiles"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Fetch Files"
-        android:id="@+id/buttonFetchFiles" />
+        android:background="@color/purple_500"
+        android:text="Fetch Files" />
+    <Button
+        android:id="@+id/btnDistribute"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/btnStart"
+        android:backgroundTint="#07BF35"
+        android:text="Distribute" />
 
     <LinearLayout
         android:orientation="horizontal"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"/>
 
+
+
     <TextView
         android:id="@+id/ExceptionMsg"
         android:layout_width="match_parent"
-        android:layout_height="66dp"
-        android:text="From database" />
+        android:layout_height="33dp"
+        android:textColor="@color/purple_200"
+        android:text="Fetch Files First" />
+
 
 
 
@@ -69,25 +124,15 @@
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:textColor="@color/purple_200"
         android:id="@+id/txtResult"/>
 
 
-    <TextView
-        android:id="@+id/timer"
-        android:layout_width="376dp"
-        android:layout_height="119dp"
-        android:gravity="center"
-        android:text="00:00:00"
-        android:textColor="@color/black"
-        android:textSize="50sp"
-        android:textStyle="bold"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+
 
     <ScrollView
         android:layout_width="373dp"
-        android:layout_height="241dp"
+        android:layout_height="82dp"
         android:layout_marginTop="10dp">
 
 
